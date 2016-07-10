@@ -1,0 +1,74 @@
+<html>
+<head>
+
+<pre>
+<link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection"/>
+<link rel="stylesheet" href="/css/css4tools.css" type="text/css" />
+</pre>
+
+<script type="text/javascript">
+function popup(mylink, windowname)
+{
+if (! window.focus)return true;
+var href;
+if (typeof(mylink) == 'string')
+   href=mylink;
+else
+   href=mylink.href;
+window.open(href, windowname, 'width=450,height=850,scrollbars=yes,resizable=yes,toolbar=no,menubar=no');
+return false;
+}
+</script>
+
+<title>MeSHy @ the BAT cave</title>
+</head>
+<body>
+
+<div class="container" style="opacity:0.92;filter:alpha(opacity=92))">
+
+<div id="header" class="span-24 last" style="background-color:white">
+<h1 style="text-align:center">MeSHy</h1>
+<h2 style="text-align:center">unanticipated knowledge discovery through statistical ranking of MeSH term pairs | <b>10.07.16</b></h2>
+</div>
+
+<div id="content" class="span-24 last">
+
+<form id="meshy" name="input" action="../cgi-bin/meshy_html.pl" method="get">
+<fieldset>
+<p style="text-align:center"><a href="http://www.ncbi.nlm.nih.gov/pubmed/21684350" target="_blank">cite us</a> | <a href="https://github.com/infspiredBAT/MeSHy" target="_blank">code</a> | <a href="http://bat.infspire.org/contactus/contact_form/index.php" onClick="return popup(this, 'contact the BAT cave')">contact us</a> | <a href="http://bat.infspire.org" target="_blank">BAT cave</a></p>
+<p style="text-align:center">you may also want to try: <a href="http://bat.infspire.org/tools/pured-mcl/" target="_blank">PuReD-MCL - clustering of related PubMed documents</a></p>
+</br>
+<p style="text-align:center">
+<input type="text" size="80" name="query" /> <input type="submit" name="count" value="see count before submit" />
+</br>
+<input type="checkbox" name="chem" checked="checked" /> include chemical terms
+</br></br>
+<input type="submit" name="submit" class="title" value="MeSHy it!" />
+</p>
+<i>please note: we currently support a maximum of 10,000 documents/query</i>
+
+</fieldset>
+</form>
+
+<p>Run a query as if you were using PubMed, wait through the progress page, and click the relevant link to view the results - once there, it should be straightforward. 
+The score is positive for MeSH term pairs which have a higher observed probability than the one theoretically computed if the MeSH terms of the pair were independent, 
+and is negative in the opposite case. Both positive (i.e. observed more than expected) and negative (i.e. observed less than expected) scores indicate a MeSH term pair 
+with probabilistically unexpected information, whereas a score around zero indicates a pair with more or less expected, and most probably already known, information.
+</br></br>
+now on <a href="https://github.com/infspiredBAT/MeSHy" target="_blank">GitHub</a>
+</p>
+<p class="small quiet terms">
+a collaboration between the Institute of Agrobiotechnology (now Institute of Applied Biosciences) at CERTH and the
+Aristotle University of Thessaloniki:
+the Department of Informatics at the School of Natural Sciences,
+the Laboratory of Pharmacology at the Department of Pharmaceutical Sciences,
+and the Department of Genetics and Plant Breeding
+</br></br>
+hosted at the <a href="http://bat.infspire.org/" target="_blank"> Bioinformatics Analysis Team / BAT</a>
+</p>
+
+</div>
+</div>
+
+</body>
+</html>
