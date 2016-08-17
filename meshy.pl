@@ -26,6 +26,7 @@ before you run MeSHy, be sure to:
 \tXML::Validate
 \tXML::LibXML::Reader
 \tStatistics::Descriptive
++ we use TableFilter (now: https://koalyptus.github.io/TableFilter/) for HTML output
 
 meshy.pl
 
