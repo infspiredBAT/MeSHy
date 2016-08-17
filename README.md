@@ -9,13 +9,14 @@ usage:
 <pre>
 before you run MeSHy, be sure to:
 - download the latest PubMed's MeSH term tree and frequencies (see code for details)
-- update the total number of PubMed articles in the code
+- update (in the code) the total (approximate) number of PubMed articles
 - have installed the following Perl modules:
 	Getopt::Long
 	LWP::Simple
 	XML::Validate
 	XML::LibXML::Reader
 	Statistics::Descriptive
++ we use TableFilter (now: https://koalyptus.github.io/TableFilter/) for HTML output
 
 meshy.pl
 
