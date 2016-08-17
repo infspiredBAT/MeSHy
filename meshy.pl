@@ -10,7 +10,7 @@ use XML::Validate;
 
 $version              = localtime((stat($0))[9]);
 
-$usage = "# MeSHy - unanticipated knowledge discovery through statistical ranking of MeSH term pairs
+$usage = "# MeSHy - discovering unanticipated knowledge by statistical ranking of MeSH term pairs
 # Theodosiou T. and Darzentas N.
 # $version
 # http://bat.infspire.org | bat\@infspire.org
@@ -19,7 +19,7 @@ welcome
 
 before you run MeSHy, be sure to:
 - download the latest PubMed's MeSH term tree and frequencies (see code for details)
-- update the total number of PubMed articles in the code
+- update (in the code) the total (approximate) number of PubMed articles
 - have installed the following Perl modules:
 \tGetopt::Long
 \tLWP::Simple
@@ -208,7 +208,7 @@ XMLCODE
     if ($validator->validate($tmp2validate)) {
         print "(?) download complete and XML is valid\n";
     } else {
-        print "(?) download complete but XML is invalid, this can happens over the net - please try again later, exiting\n";
+        print "(?) download complete but XML is invalid, this can happen over the net - please try again later, exiting\n";
         my $message = $validator->last_error()->{message};
         my $line = $validator->last_error()->{line};
         my $column = $validator->last_error()->{column};
@@ -518,7 +518,7 @@ else {
 	$type_of_input = "PubMed XML file";
     }
 }
-print HTML "<title>MeSHy results for $type_of_input $keyword</title>";
+print HTML "<title>'$keyword' | MeSHy @ the BAT cave</title>";
 # http://tablefilter.free.fr/dwn.php
 print HTML <<HTMLCODE;
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
@@ -540,16 +540,19 @@ background:#fff;
 <body>
 HTMLCODE
     my $number_documents = $pmid_pos - 1;
-print HTML "<h1>MeSHy results for $type_of_input $keyword ($number_documents documents)</h1>";
+print HTML qq('<font style="font-size:2em">$keyword</font>' <font style="font-size:1.4em">< $number_documents PubMed documents</font>
+ | <a href=http://bat.infspire.org/tools/meshy/>MeSHy</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/21684350" target="_blank">cite us</a> | <a href="https://github.com/infspiredBAT/MeSHy" target="_blank">code</a> | <a href="mailto:bat@infspire.org" target="_blank">contact us</a> | <a href="http://bat.infspire.org" target="_blank">BAT cave</a>);
+
 print HTML <<HTMLCODE;
 <table id="table1" class="mytable" cellspacing="0" cellpadding="0">
 <thead>
 <tr>
-<th>Pair</th>
+<th>pair</th>
 <th>MeSH 1</th><th>MeSH category</th>
 <th>MeSH 2</th><th>MeSH category</th>
 <th>MeSH 1 - MeSH 2</th>
-<th>Score</th><th>PMIDs</th>
+<th>score</th>
+<th>PMID(order):year[:type(s)]</th>
 </tr>
 </thead>
 <tbody>
