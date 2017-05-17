@@ -4,11 +4,11 @@ $| = 1;
 
 use Getopt::Long;
 use Statistics::Descriptive;
-use XML::LibXML::Reader;
 use LWP::Simple;
-use XML::Validate;
+#use XML::Validate;
+use XML::LibXML::Reader;
 
-$version              = localtime((stat($0))[9]);
+$version = localtime((stat($0))[9]);
 
 $usage = "# MeSHy - discovering unanticipated knowledge by statistical ranking of MeSH term pairs
 # Theodosiou T. and Darzentas N.
@@ -23,7 +23,6 @@ before you run MeSHy, be sure to:
 - have installed the following Perl modules:
 \tGetopt::Long
 \tLWP::Simple
-\tXML::Validate
 \tXML::LibXML::Reader
 \tStatistics::Descriptive
 + we use TableFilter (now: https://koalyptus.github.io/TableFilter/) for HTML output
@@ -138,13 +137,13 @@ if($cluster_file ne ''){
 if (defined($query) =~ /\w/) {
     # Define library for the 'get' function used in the next section.
     # $utils contains route for the utilities.
-    # $db, $query, and $report may be supplied by the user when prompted; 
+    # $db, $query, and $report may be supplied by the user when prompted;
     # if not answered, default values, will be assigned as shown below.
-    
+
     print "(?) querying PubMed with: $query\n";
 
     my $utils = "http://www.ncbi.nlm.nih.gov/entrez/eutils";
-    
+
     my $db     = "Pubmed";
     my $report = "xml";
     my $esearch = "$utils/esearch.fcgi?" .
@@ -152,27 +151,27 @@ if (defined($query) =~ /\w/) {
     my $retstart;
     my $retmax=1000;
     my $results = $pwd."/meshy.query$randomer.xml";
-    
+
     my $esearch_result = get($esearch . $query);
-    
-    $esearch_result =~ 
+
+    $esearch_result =~
       m|<Count>(\d+)</Count>.*<QueryKey>(\d+)</QueryKey>.*<WebEnv>(\S+)</WebEnv>|s;
-    
+
     my $count    = $1;
     my $queryKey = $2;
     my $webEnv   = $3;
-    
+
     if ($count > $max_documents){
-        print "(!) we found $count documents but only the first $max_documents will be downloaded and validated\n";
+        print "(!) we found $count documents but only the first $max_documents will be downloaded\n";
         $count = $max_documents;
     } elsif ($count > 0) {
-        print "(=) we found $count documents - downloading and validating\n";
+        print "(=) we found $count documents - downloading\n";
     } else {
         print "(=) we found no documents - exiting\n";
         exit;
     }
-    
-    # this area defines a loop which will display $retmax citation results from 
+
+    # this area defines a loop which will display $retmax citation results from
     # Efetch each time the the Enter Key is pressed, after a prompt.
     for($retstart = 0; $retstart < $count; $retstart += $retmax) {
         my $left = $count - $retstart;
@@ -180,7 +179,7 @@ if (defined($query) =~ /\w/) {
         my $efetch = "$utils/efetch.fcgi?" .
         "retmode=$report&retstart=$retstart&retmax=$retmax&" .
         "db=$db&query_key=$queryKey&WebEnv=$webEnv";
-        
+
         my $efetch_result = get($efetch);
         $efetch_results .= $efetch_result;
         sleep(2);
@@ -192,48 +191,50 @@ if (defined($query) =~ /\w/) {
             $cleaned_efetch_results .= "$line\n";
         }
     }
-    $tmp2validate = <<XMLCODE;
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2015//EN" "http://www.ncbi.nlm.nih.gov/corehtml/query/DTD/pubmed_150101.dtd">
+    $xml_results = <<XMLCODE;
+<?xml version="1.0"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2017//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_170101.dtd">
 <PubmedArticleSet>
 $cleaned_efetch_results
 </PubmedArticleSet>
 XMLCODE
-    open(RES,">$results") or die "Cannot create file query_res.xml: $!\n";    
+    open(RES,">$results") or die "Cannot create file query_res.xml: $!\n";
     binmode(RES, ":utf8");
-    print RES $tmp2validate;
+    print RES $xml_results;
     close RES;
     $xml_filename = $results;
-    $tmp2validate = do {local (@ARGV,$/) = "$xml_filename"; <>}; # file slurp!
-    $validator = new XML::Validate(Type => 'LibXML');  
-    if ($validator->validate($tmp2validate)) {
-        print "(?) download complete and XML is valid\n";
-    } else {
-        print "(?) download complete but XML is invalid, this can happen over the net - please try again later, exiting\n";
-        my $message = $validator->last_error()->{message};
-        my $line = $validator->last_error()->{line};
-        my $column = $validator->last_error()->{column};
-        print "error: $message at line $line, column $column\n";
-        exit;
-    }    
-    undef $tmp2validate;
-    
+    print "(?) download complete and XML saved\n";
+    #$xml_results = do {local (@ARGV,$/) = "$xml_filename"; <>}; # file slurp!
+    #$validator = new XML::Validate(Type => 'LibXML');
+    #if ($validator->validate($xml_results)) {
+    #    print "(?) download complete and XML is valid\n";
+    #} else {
+    #    print "(?) download complete but XML is invalid, this can happen over the net - please try again later, exiting\n";
+    #    my $message = $validator->last_error()->{message};
+    #    my $line = $validator->last_error()->{line};
+    #    my $column = $validator->last_error()->{column};
+    #    print "error: $message at line $line, column $column\n";
+    #    exit;
+    #}
+    #undef $xml_results;
+
 } elsif (defined($xml_filename)) {
 
-    print "(?) loading and validating PubMed XML\n";
-    $tmp2validate = do {local (@ARGV,$/) = "$xml_filename"; <>}; # file slurp!
-    $validator = new XML::Validate(Type => 'LibXML');  
-    if ($validator->validate($tmp2validate)) {
-        print "(?) XML is valid\n";
-    } else {
-        print "(?) XML is invalid - please try again with another file, exiting\n";
-        my $message = $validator->last_error()->{message};
-        my $line = $validator->last_error()->{line};
-        my $column = $validator->last_error()->{column};
-        print "error: $message at line $line, column $column\n";
-        exit;
-    }    
-    undef $tmp2validate;
+    print "(?) loading PubMed XML\n";
+    #print "(?) loading and validating PubMed XML\n";
+    #$xml_results = do {local (@ARGV,$/) = "$xml_filename"; <>}; # file slurp!
+    #$validator = new XML::Validate(Type => 'LibXML');
+    #if ($validator->validate($xml_results)) {
+    #    print "(?) XML is valid\n";
+    #} else {
+    #    print "(?) XML is invalid - please try again with another file, exiting\n";
+    #    my $message = $validator->last_error()->{message};
+    #    my $line = $validator->last_error()->{line};
+    #    my $column = $validator->last_error()->{column};
+    #    print "error: $message at line $line, column $column\n";
+    #    exit;
+    #}
+    #undef $xml_results;
 }
 
 print "(?) reading PubMed XML file\n" unless $verbose == 0;
@@ -277,7 +278,7 @@ while ($reader->read) {
         $chemflag = 1;
     }
     if ($reader->name eq "NameOfSubstance" && $chemflag and $reader->nodeType == 1) {
-        $reader->read;        
+        $reader->read;
         $descriptor = $reader->value;
         $descriptors{$descriptor} = 1;
         $mesh_tree{$descriptor}{'D'} = $mesh_cat{'D'};
@@ -295,11 +296,11 @@ while ($reader->read) {
                 $mem{$descriptor} = 1;
             }
         }
-    
+
         $chemflag = 0;
         ++$query_size{all};
 	    ++$query_size{$pmid_cluster{$pmid}} unless !defined($pmid_cluster{$pmid});
-        # print "Processing article number: $query_size{all}\r" unless $verbose == 0; 
+        # print "Processing article number: $query_size{all}\r" unless $verbose == 0;
         foreach $descriptor_a (keys %mem) {
             ++$term_stats{all}{$descriptor_a}{in_pmids};
             # hold the number of occurences of each MeSH per cluster
@@ -439,7 +440,7 @@ foreach $group (keys %printmem){
         }
         if (!defined($rel_freq{pubmed}{all}{minus}{$term})) {
             $log_odds = 0;
-        } elsif ($rel_freq{pubmed}{all}{minus}{$term} == 0) { 
+        } elsif ($rel_freq{pubmed}{all}{minus}{$term} == 0) {
             $log_odds = 0;
         } else {
 	        $log_odds = log($rel_freq{query}{$group}{$term} / $rel_freq{pubmed}{all}{minus}{$term});
@@ -478,7 +479,7 @@ foreach $group (keys %printmem) {
             $combined_score = $new_score * (1 - $semantic_score);
             $score{$group}{$combined_score}{$a}{$b} = $annotation;
             #foreach $pmid (keys %{ $ids_mesh{$group}{$a}{$b} }) {
-            #    $ranked{$group}{$pmid}{$combined_score} = 1; 
+            #    $ranked{$group}{$pmid}{$combined_score} = 1;
             #}
             ++$term_stats{$group}{$a}{in_pairs};
             ++$term_stats{$group}{$b}{in_pairs};
@@ -531,7 +532,7 @@ print HTML <<HTMLCODE;
 <script src="TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script>
 <style type="text/css" media="screen">
 \@import "TableFilter/filtergrid.css";
-div#navmenu li a#lnk01{ 
+div#navmenu li a#lnk01{
 color:#333; font-weight:bold;
 border-top:2px solid #ff9900;
 background:#fff;
@@ -541,8 +542,8 @@ background:#fff;
 <body>
 HTMLCODE
     my $number_documents = $pmid_pos - 1;
-print HTML qq('<font style="font-size:2em">$keyword</font>' <font style="font-size:1.4em">< $number_documents PubMed documents</font>
- | <a href=http://bat.infspire.org/tools/meshy/>MeSHy</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/21684350" target="_blank">cite us</a> | <a href="https://github.com/infspiredBAT/MeSHy" target="_blank">code</a> | <a href="mailto:bat@infspire.org" target="_blank">contact us</a> | <a href="http://bat.infspire.org" target="_blank">BAT cave</a>);
+print HTML qq('<font style="font-size:1.2em">$keyword</font>' <font style="font-size:1.1em">< $number_documents PubMed documents</font>
+ | <a href=http://bat.infspire.org/tools/meshy/>MeSHy</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/21684350" target="_blank">cite us</a> | <a href="https://github.com/infspiredBAT/MeSHy" target="_blank">code</a> | <a href="mailto:bat\@infspire.org" target="_blank">contact us</a> | <a href="http://bat.infspire.org" target="_blank">BAT cave</a>);
 
 print HTML <<HTMLCODE;
 <table id="table1" class="mytable" cellspacing="0" cellpadding="0">
@@ -573,7 +574,7 @@ foreach $group (sort keys %score) {
                     } else {
                         $pubtypes2print = "";
                     }
-                    $pmid_html = "<a href=\"http://www.ncbi.nlm.nih.gov/pubmed?term=" . $pmid 
+                    $pmid_html = "<a href=\"http://www.ncbi.nlm.nih.gov/pubmed?term=" . $pmid
                     . "[uid]\" target=\"_blank\">$pmid($ori_rank{$pmid}):$pub_years{$pmid}$pubtypes2print</a>";
                     push(@tmp_html,$pmid_html);
         		}
@@ -606,11 +607,11 @@ foreach $group (sort keys %score) {
                 }
                 $mesh1_html = "<a href=\"http://www.ncbi.nlm.nih.gov/mesh?term=" . $mesh1only . "\" target=\"_blank\">$mesh1</a>   [$pop{query}{$group}{$mesh1}]";
                 $mesh2_html = "<a href=\"http://www.ncbi.nlm.nih.gov/mesh?term=" . $mesh2only . "\" target=\"_blank\">$mesh2</a>   [$pop{query}{$group}{$mesh2}]";
-        
+
                 print HTML "<tr>";
-                printf HTML ("<td>$count</td>" . 
-                    "<td>$mesh1_html</td><td>$tree1</td>" . 
-                    "<td>$mesh2_html</td><td>$tree2</td>" . 
+                printf HTML ("<td>$count</td>" .
+                    "<td>$mesh1_html</td><td>$tree1</td>" .
+                    "<td>$mesh2_html</td><td>$tree2</td>" .
                     "<td>$mesh1_html - $mesh2_html</td>" .
                          "<td>%.3f</td><td>$pmids_html</td>\n",$scre);
                 print HTML "</tr>\n";
@@ -631,25 +632,25 @@ print HTML "</table>\n";
 print HTML <<HTMLCODE;
 <script language="javascript" type="text/javascript">
 //<![CDATA[
-var props = {  
-        sort: true,  
+var props = {
+        sort: true,
         sort_config: {
                       sort_types:['Number','String','String','String','String','String','Number','String']
-                     },  
-        remember_grid_values: true,  
+                     },
+        remember_grid_values: true,
         status: true,
         highlight_keywords: true,
-        alternate_rows: true,  
-        rows_counter: true,  
-        rows_counter_text: "Displayed pairs: ",  
-        btn_reset: true,  
-        btn_reset_text: "Clear",  
-        status_bar: true,  
+        alternate_rows: true,
+        rows_counter: true,
+        rows_counter_text: "Displayed pairs: ",
+        btn_reset: true,
+        btn_reset_text: "Clear",
+        status_bar: true,
         col_1: "select",
-        col_2: "multiple",  
+        col_2: "multiple",
         col_3: "select",
         col_4: "multiple",
-        display_all_text: "< Show all >",  
+        display_all_text: "< Show all >",
         custom_slc_options: {
               cols:[2,4],
               texts: [['A:Anatomy','B:Organisms','C:Diseases','D:Chemical and Drugs','E:Analytical, Diagnostic and Therapeutic Techniques and Equipment','F:Psychiatry and Physchology','G:Phenomena and Processes','H:Disciplines and Occupations','I:Anthropology, Education, Sociology and Social Phenomena','J:Technology, Industry, Agriculture','K:Humanities','L:Information Science','M:Named Groups','N:Health Care','V:Publication Characteristics','Z:Geographicals'],['A:Anatomy','B:Organisms','C:Diseases','D:Chemical and Drugs','E:Analytical, Diagnostic and Therapeutic Techniques and Equipment','F:Psychiatry and Physchology','G:Phenomena and Processes','H:Disciplines and Occupations','I:Anthropology, Education, Sociology and Social Phenomena','J:Technology, Industry, Agriculture','K:Humanities','L:Information Science','M:Named Groups','N:Health Care','V:Publication Characteristics','Z:Geographicals']],
@@ -658,12 +659,12 @@ var props = {
 },
         col_width: ["15px","150px","200px","150px","200px","150px","70px","100px"],
 
-extensions: { 
+extensions: {
 
-name:['ColsVisibility'], 
-src:['TableFilter/TFExt_ColsVisibility/TFExt_ColsVisibility.js'], 
-description:['Columns visibility manager'], 
-initialize:[function(o){o.SetColsVisibility();}] 
+name:['ColsVisibility'],
+src:['TableFilter/TFExt_ColsVisibility/TFExt_ColsVisibility.js'],
+description:['Columns visibility manager'],
+initialize:[function(o){o.SetColsVisibility();}]
 },
 
 }
@@ -686,21 +687,21 @@ sub sim {
     my ($mesh1, $mesh2, %mtree) = @_;
     my $score = 0;
     my $simab = 0;
-    
+
     my $stats = Statistics::Descriptive::Full->new();
-    
+
     foreach $mid1 (keys %{ $mtree{$mesh1} }) {
         my $mid_stats = Statistics::Descriptive::Full->new();
         my $cca_max = 0;
         my $root1 = substr($mid1,0,1);
-    
+
 MID2:   foreach $mid2 (keys %{ $mtree{$mesh2} }) {
-    
+
             my $root2 = substr($mid2,0,1);
             if($root1 ne $root2){
                 $simab = 0;
                 $stats->add_data($simab);
-                next; 
+                next;
             }
             else {
                 my $count = 0;
@@ -728,7 +729,7 @@ MID2:   foreach $mid2 (keys %{ $mtree{$mesh2} }) {
             $stats->add_data(0);
         }
     }
-    
+
     my $total_ids1 = scalar(keys %{ $mtree{$mesh1} });
     my $total_ids2 = scalar(keys %{ $mtree{$mesh2} });
     if($total_ids1 == 0 or $total_ids2 == 0){
