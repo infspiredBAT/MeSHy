@@ -2,7 +2,7 @@
 unanticipated knowledge discovery through statistical ranking of MeSH term pairs
 
 </br>
-server: http://bat.infspire.org/tools/meshy/</br>
+server: http://bat.infspire.org/tools/meshy</br>
 citation: http://www.ncbi.nlm.nih.gov/pubmed/21684350</br>
 code: we provide the main Perl script, and the server's CGI script and HTML page - you'll need a few more things...</br>
 usage:
